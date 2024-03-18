@@ -3,6 +3,7 @@ pipeline {
     
     environment {
         SONAR_TOKEN = credentials('SonarQube')
+        SONAR_URL = 'http://localhost:9000'
     }
     
     stages {
@@ -23,20 +24,15 @@ pipeline {
         stage('SonarQube analysis') {
             steps {
                 script {
-                    // Obtener la configuración del servidor SonarQube
-                    def sonarQubeServer = getSonarQubeServer('SonarQube')
-                    def sonarQubeURL = sonarQubeServer.get('url')
-                    def sonarQubeToken = sonarQubeServer.get('credentialsId')
-                    
                     // Ejecutar el análisis de SonarQube
                     def scannerHome = tool 'SonarQubeScanner'
-                    withSonarQubeEnv('SonarQube Server') {
+                    withEnv(["SONAR_USER_HOME=${scannerHome}"]) {
                         bat "${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=nombre-del-proyecto \
                             -Dsonar.sources=src \
                             -Dsonar.java.binaries=target/classes \
-                            -Dsonar.host.url=${sonarQubeURL} \
-                            -Dsonar.login=${sonarQubeToken}"
+                            -Dsonar.host.url=${env.SONAR_URL} \
+                            -Dsonar.login=${env.SONAR_TOKEN}"
                     }
                 }
             }
